@@ -49,20 +49,27 @@ object GraphWithConcat extends App {
     val source = Source(1 to 5).async
     val source2 = Source(6 to 10).async
     val source3 = Source(11 to 15).async
-    val f1 = Flow[Int].map(_ + 100)
-    val f2 = Flow[Int].map(_ + 10)
+    val f1 = Flow[Int].map {v =>
+      Thread.sleep(300)
+      v + 100
+    }
+    val f2 = Flow[Int].map {v =>
+      Thread.sleep(100)
+      v + 10
+    }
 //    val concat = b.add(Merge[Any](2))
     val concat = b.add(Concat[Any](3))
     source ~> f1 ~> concat ~> Sink.foreach(println)
     source2 ~> f2 ~> concat
     source3 ~> f2 ~> concat
+
     ClosedShape
   })
 
 //  concatDoc.run()
   concat.run()
 
-  Thread.sleep(1000)
+  Thread.sleep(10000)
   system.terminate()
 
 }
