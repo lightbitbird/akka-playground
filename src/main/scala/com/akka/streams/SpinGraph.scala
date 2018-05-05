@@ -11,7 +11,7 @@ object SpinGraph extends App {
   implicit val system = ActorSystem("streams-actor")
   implicit val materializer = ActorMaterializer()
 
-  val runnableGraph: RunnableGraph[NotUsed] =
+  val basicGraph: RunnableGraph[NotUsed] =
     RunnableGraph.fromGraph(GraphDSL.create() {
       implicit builder: GraphDSL.Builder[NotUsed] =>
         import GraphDSL.Implicits._
@@ -34,7 +34,7 @@ object SpinGraph extends App {
         ClosedShape
     })
 
-  val g = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
+  val basicGraph2 = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
     import GraphDSL.Implicits._
     val in = Source(1 to 10)
 //    val out: Sink[Any, Future[Done]] = Sink.foreach(println)
@@ -53,61 +53,8 @@ object SpinGraph extends App {
     ClosedShape
   })
 
-  val graphWithConcat = RunnableGraph.fromGraph(GraphDSL.create() { implicit b =>
-    import GraphDSL.Implicits._
-    val source = Source(1 to 5)
-
-    val zip = b.add(ZipWith((left: Int, right: Int) => left))
-    val bcast = b.add(Broadcast[Int](2))
-    val concat = b.add(Concat[Int]())
-    //    val start = Source(6 to 10)
-    val start = Source.single(0)
-
-    source ~> zip.in0
-    zip.out.map { s => println(s); s } ~> bcast ~> Sink.ignore
-    zip.in1 <~ concat <~ start
-    concat         <~          bcast
-
-    //    source ~> zip.in0
-    //    zip.out.map { s => println(s); s } ~> bcast ~> Sink.ignore
-    //    zip.in1             <~                bcast
-
-    ClosedShape
-  })
-
-  val concat = RunnableGraph.fromGraph(GraphDSL.create() { implicit b =>
-    import GraphDSL.Implicits._
-
-//    val sources = buckets.map(bucket => {
-//      val future: Future[List[Any]] = session.execute(....)
-//      Source.fromFuture(future).mapConcat(identity)
-//    }
-//
-//    val concat = builder.add(Concat[Any](sources.size))
-//    sources.foreach(s => {
-//      ...
-//
-//      s ~>... ~> concat
-//    })
-//    concat ~> sink
-
-    val source = Source(1 to 5).async
-    val source2 = Source(6 to 10).async
-    val source3 = Source(11 to 15).async
-    val f1 = Flow[Int].map(_ + 100)
-    val f2 = Flow[Int].map(_ + 10)
-//    val concat = b.add(Merge[Any](2))
-    val concat = b.add(Concat[Any](3))
-    source ~> f1 ~> concat ~> Sink.foreach(println)
-    source2 ~> f2 ~> concat
-    source3 ~> f2 ~> concat
-    ClosedShape
-  })
-
-//  runnableGraph.run()
-//  g.run()
-//  graphWithConcat.run()
-  concat.run()
+  basicGraph.run()
+//  basicGraph2.run()
 
   Thread.sleep(1000)
   system.terminate()
