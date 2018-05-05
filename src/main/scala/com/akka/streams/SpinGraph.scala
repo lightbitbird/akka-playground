@@ -77,14 +77,30 @@ object SpinGraph extends App {
 
   val concat = RunnableGraph.fromGraph(GraphDSL.create() { implicit b =>
     import GraphDSL.Implicits._
+
+//    val sources = buckets.map(bucket => {
+//      val future: Future[List[Any]] = session.execute(....)
+//      Source.fromFuture(future).mapConcat(identity)
+//    }
+//
+//    val concat = builder.add(Concat[Any](sources.size))
+//    sources.foreach(s => {
+//      ...
+//
+//      s ~>... ~> concat
+//    })
+//    concat ~> sink
+
     val source = Source(1 to 5).async
     val source2 = Source(6 to 10).async
+    val source3 = Source(11 to 15).async
     val f1 = Flow[Int].map(_ + 100)
     val f2 = Flow[Int].map(_ + 10)
 //    val concat = b.add(Merge[Any](2))
-    val concat = b.add(Concat[Any](2))
+    val concat = b.add(Concat[Any](3))
     source ~> f1 ~> concat ~> Sink.foreach(println)
     source2 ~> f2 ~> concat
+    source3 ~> f2 ~> concat
     ClosedShape
   })
 
