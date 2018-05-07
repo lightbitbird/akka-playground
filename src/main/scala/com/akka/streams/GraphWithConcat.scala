@@ -76,9 +76,13 @@ object GraphWithConcat extends App {
       import GraphDSL.Implicits._
 
       val f1 = Flow[Int].map {v =>
-        Thread.sleep(300)
+        if (v % 2 == 0)
+          Thread.sleep(300)
+        else
+          Thread.sleep(100)
         v + 100
-      }
+      }.async
+
       val f2 = Flow[Int].map {v =>
         Thread.sleep(100)
         v + 10
