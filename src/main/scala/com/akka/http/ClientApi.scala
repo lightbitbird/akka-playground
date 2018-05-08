@@ -1,9 +1,11 @@
 package com.akka.http
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, Uri}
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, SourceShape}
+import akka.stream.scaladsl.{Concat, Flow, GraphDSL, Sink, Source}
 import com.akka.models.{GitHubV2Entity, JsonSupport}
 import com.typesafe.config.{Config, ConfigFactory}
 
@@ -45,5 +47,41 @@ object ClientApi extends App with JsonSupport {
       case true => default.getConfig(env).withFallback(default)
       case false => default
     }
+  }
+
+  val source = Source(1 to 5).async
+  val source2 = Source(6 to 10).async
+  val source3 = Source(11 to 15).async
+
+  def compoundFlowFrom(sources: Seq[Source[Int, NotUsed]]) = {
+    GraphDSL.create() { implicit b =>
+      import akka.stream.scaladsl.GraphDSL.Implicits._
+
+      val f1 = Flow[Int].map {v =>
+        if (v % 2 == 0)
+          Thread.sleep(300)
+        else
+          Thread.sleep(100)
+        v + 100
+      }.async
+
+      val f2 = Flow[Int].map {v =>
+        Thread.sleep(100)
+        v + 10
+      }
+      val concat = b.add(Concat[Int](3))
+      sources.foreach(s => s ~> f1 ~> concat)
+
+      SourceShape(concat.out)
+    }
+  }
+
+//  def runFromSource: Source[Int, NotUsed] = {
+  def runFromSource: Seq[Int] = {
+    val sourceShape = compoundFlowFrom(Seq(source, source2, source3))
+    val list = Seq[Int]()
+//    Source.fromGraph(sourceShape)
+    Source.fromGraph(sourceShape).runWith(Sink.foreach(list :+ _))
+    list
   }
 }

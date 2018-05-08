@@ -102,7 +102,8 @@ object GraphWithConcat extends App {
 //  concatDoc.run()
 //  concat.run()
   val sourceShape = compoundFlowFrom(Seq(source, source2, source3))
-  Source.fromGraph(sourceShape).runWith(Sink.foreach(println))
+  val list = Seq[Any]()
+  Source.fromGraph(sourceShape).runWith(Sink.foreach(list :+ _))
 //  Source.fromGraph(sourceShape).to(Sink.foreach(println))
 //  sourceShape.toMat(Sink.foreach(println))
 
