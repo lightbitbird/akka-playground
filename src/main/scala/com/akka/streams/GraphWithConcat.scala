@@ -2,12 +2,15 @@ package com.akka.streams
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Broadcast, Concat, Flow, GraphDSL, RunnableGraph, Sink, Source, ZipWith}
+import akka.stream.scaladsl.{Broadcast, Concat, Flow, GraphDSL, Keep, RunnableGraph, Sink, Source, ZipWith}
 import akka.stream.{ActorMaterializer, ClosedShape, FlowShape, SourceShape}
+
+import scala.util.{Failure, Success}
 
 object GraphWithConcat extends App {
   implicit val system = ActorSystem("streams-actor")
   implicit val materializer = ActorMaterializer()
+  implicit val ec = system.dispatcher
 
   val concatDoc = RunnableGraph.fromGraph(GraphDSL.create() { implicit b =>
     import GraphDSL.Implicits._
@@ -89,7 +92,7 @@ object GraphWithConcat extends App {
       }
       //    val merge = b.add(Merge[Any](2))
 //      val broadcast = b.add(Broadcast[Int](3))
-      val concat = b.add(Concat[Any](3))
+      val concat = b.add(Concat[Int](3))
       sources.foreach(s => s ~> f1 ~> concat)
 //      broadcast ~> f1 ~> concat
 //      broadcast ~> f2 ~> concat
@@ -102,14 +105,16 @@ object GraphWithConcat extends App {
 //  concatDoc.run()
 //  concat.run()
   val sourceShape = compoundFlowFrom(Seq(source, source2, source3))
-  val list = Seq[Any]()
-  Source.fromGraph(sourceShape).runWith(Sink.foreach(list :+ _))
+//  val future = Source.fromGraph(sourceShape).runWith(Sink.foreach(println))
+  val future = Source.fromGraph(sourceShape).toMat(Sink.fold(Seq.empty[Int])(_ :+ _))(Keep.right).run()
+  future.onComplete(f => f.foreach(println))
+
 //  Source.fromGraph(sourceShape).to(Sink.foreach(println))
 //  sourceShape.toMat(Sink.foreach(println))
 
 //  Source(Seq(source, source2, source3)).via(concatFlow)
 
-  Thread.sleep(10000)
+  Thread.sleep(7000)
   system.terminate()
 
 }

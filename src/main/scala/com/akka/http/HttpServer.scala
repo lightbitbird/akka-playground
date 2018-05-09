@@ -12,8 +12,8 @@ object HttpServer extends App with AkkaHttpConfig {
   implicit lazy val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  val host = Try(config.getString("service.host")).getOrElse("127.0.0.1")
-  val port = Try(config.getInt("service.port")).getOrElse(5000)
+  val host = Try(config.getString("http.host")).getOrElse("127.0.0.1")
+  val port = Try(config.getInt("http.port")).getOrElse(5000)
   def startApp = {
     Http().bindAndHandle(new ApiRoute().route, host, port)
   }
