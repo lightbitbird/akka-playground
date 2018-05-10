@@ -49,43 +49,4 @@ object ClientApi extends App with JsonSupport {
     }
   }
 
-  def compoundFlowFrom(sources: Seq[Source[Int, NotUsed]]) = {
-    GraphDSL.create() { implicit b =>
-      import akka.stream.scaladsl.GraphDSL.Implicits._
-
-      println("------------------------")
-//      sources.foreach(s => println(s"source -> $s"))
-
-      val f1 = Flow[Int].map {v =>
-        println(s"v -> $v")
-        if (v % 2 == 0)
-          Thread.sleep(300)
-        else
-          Thread.sleep(100)
-        v + 100
-      }
-
-      val f2 = Flow[Int].map {v =>
-        Thread.sleep(100)
-        v + 10
-      }
-      val concat = b.add(Concat[Int](3))
-      sources.foreach(s => s ~> f1 ~> concat)
-      println("----------2--------------")
-
-      SourceShape(concat.out)
-    }
-  }
-
-//  def runFromSource: Source[Int, NotUsed] = {
-  def runFromSource: Future[Seq[Int]] = {
-    val source = Source(1 to 5).async
-    val source2 = Source(6 to 10).async
-    val source3 = Source(11 to 15).async
-    val sourceShape = compoundFlowFrom(Seq(source, source2, source3))
-//    Source.fromGraph(sourceShape).runWith(Sink.collection)
-
-    Source.fromGraph(sourceShape).toMat(Sink.fold(Seq.empty[Int])(_ :+ _))(Keep.right).run()
-//    Source.fromGraph(sourceShape).runWith(Sink.foreach(println))
-  }
 }

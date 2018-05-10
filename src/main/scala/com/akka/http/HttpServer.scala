@@ -7,20 +7,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.util.Try
 
-object HttpServer extends App with AkkaHttpConfig {
-  implicit lazy val system = ActorSystem("kafka-producer-api")
-  implicit lazy val materializer = ActorMaterializer()
-  implicit val ec = system.dispatcher
-
-  val host = Try(config.getString("http.host")).getOrElse("127.0.0.1")
-  val port = Try(config.getInt("http.port")).getOrElse(5000)
-  def startApp = {
-    Http().bindAndHandle(new ApiRoute().route, host, port)
-  }
-
-  startApp
-}
-
 trait Configuration {
   def config: Config
 }
@@ -38,3 +24,18 @@ trait AkkaHttpConfig extends Configuration {
     }
   }
 }
+
+object HttpServer extends App with AkkaHttpConfig {
+  implicit lazy val system = ActorSystem("kafka-producer-api")
+  implicit lazy val materializer = ActorMaterializer()
+  implicit val ec = system.dispatcher
+
+  val host = Try(config.getString("http.host")).getOrElse("127.0.0.1")
+  val port = Try(config.getInt("http.port")).getOrElse(5000)
+  def startApp = {
+    Http().bindAndHandle(new ApiRoute().route, host, port)
+  }
+
+  startApp
+}
+
