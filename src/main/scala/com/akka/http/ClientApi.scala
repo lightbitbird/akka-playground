@@ -1,15 +1,13 @@
 package com.akka.http
 
-import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, Uri}
-import akka.stream.{ActorMaterializer, SourceShape}
-import akka.stream.scaladsl.{Concat, Flow, GraphDSL, Keep, Sink, Source}
+import akka.stream.ActorMaterializer
 import com.akka.models.{GitHubV2Entity, JsonSupport}
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 object ClientApi extends App with JsonSupport {
   implicit val system: ActorSystem = ActorSystem()
@@ -25,13 +23,6 @@ object ClientApi extends App with JsonSupport {
 
   val request: HttpRequest = HttpRequest(method = HttpMethods.GET, uri)
   val response = Http().singleRequest(request)
-//  val result = response.flatMap(res => GitHubEntity.unmarshal(res.entity)(ec, materializer))
-////  val result = response.flatMap(res => Unmarshal(res.entity).to[GitResult])
-//  result.recover {
-//    case e: Exception => println(s"""exception -> ${e.getMessage}""")
-//    case t => println(s"""error -> ${t.getMessage}""")
-//  }
-//  result.onComplete(f => println(s"GitResult:::  ${f.get}"))
 
   val result2 = response.flatMap(res => GitHubV2Entity.unmarshal(res.entity))
   result2.recover {
