@@ -1,43 +1,59 @@
 package com.akka.http
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, Uri}
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
-import com.akka.models.{GitHubV2Entity, JsonSupport}
-import com.typesafe.config.{Config, ConfigFactory}
+import akka.stream.scaladsl.Source
+import com.akka.models.JsonSupport
+import com.akka.streams.ClientGraph
+import com.config.AkkaPlaygroundConfig
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 object ClientApi extends App with JsonSupport {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
 
-  val config: Config = innerConfig
-
-  val user = "lightbitbird"
-  val uri = Uri("https://" + config.getString("rest.api.url") + Uri(config.getString("rest.api.uri") + user))
-
-  println("https://" + config.getString("rest.api.url") + Uri(config.getString("rest.api.uri") + user))
-
-  val request: HttpRequest = HttpRequest(method = HttpMethods.GET, uri)
-  val response = Http().singleRequest(request)
-
-  val result2 = response.flatMap(res => GitHubV2Entity.unmarshal(res.entity))
-  result2.recover {
-    case e: Exception => println(s"""exception -> ${e.getMessage}""")
-    case t => println(s"""error -> ${t.getMessage}""")
-  }
-  result2.onComplete(f => println(s"GitResultV2:::  ${f.get}"))
-
-  private def innerConfig: Config = {
-    val env = System.getProperty("DEVELOP", "akka-playground")
-    val default = ConfigFactory.load()
-    default.hasPath(env) match {
-      case true => default.getConfig(env).withFallback(default)
-      case false => default
-    }
-  }
-
+//  ClientGraph.runFromSource.foreach(println)
+  ClientGraph.runGitApiSource.foreach(println)
+//  ClientGraph.runRestMultiSources.foreach(println)
 }
+
+trait RestClient extends AkkaPlaygroundConfig {
+  def getUrl(name: String): Uri
+
+  def request(uri: Uri): HttpRequest = {
+    HttpRequest(method = HttpMethods.GET, uri)
+  }
+
+  def run(request: HttpRequest)(implicit system: ActorSystem): Future[HttpResponse] = {
+    Http().singleRequest(request)
+  }
+}
+
+object GitRestClinet extends RestClient {
+  def getUrl(name: String): Uri = {
+    Uri("https://" + config.getString("rest.api.url") + Uri(config.getString("rest.api.uri") + name))
+  }
+
+  //create one source for many request
+  def createRestSources(names: Seq[String])
+                       (implicit system: ActorSystem): Source[HttpRequest, NotUsed] = {
+    Source[HttpRequest](names.map(n => GitRestClinet.request(GitRestClinet.getUrl(n))).toList)
+  }
+
+  //create multiple single sources
+  def createSingleSources(names: Seq[String])
+                         (implicit system: ActorSystem): Seq[Source[HttpRequest, NotUsed]] = {
+    names.map(n => singleSource(n))
+  }
+
+  def singleSource(name: String)
+                  (implicit system: ActorSystem): Source[HttpRequest, NotUsed] = {
+    Source.single[HttpRequest](GitRestClinet.request(GitRestClinet.getUrl(name)))
+  }
+}
+
