@@ -3,10 +3,10 @@ package com.akka.http
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse, Uri}
+import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
-import com.akka.models.{SearchKeys, JsonSupport}
+import akka.stream.scaladsl.{Flow, Sink, Source}
+import com.akka.models.{JsonSupport, OpenBdEntity, SearchKeys, Summary}
 import com.akka.streams.ClientGraph
 import com.config.AkkaPlaygroundConfig
 
@@ -28,6 +28,7 @@ object ClientApi extends App with JsonSupport {
     case _ => println(s"Unexpected Error")
   }
   result.onComplete(println)
+//  Source(List.empty[List[OpenBdEntity]]).via(Flow[List[OpenBdEntity]].mapConcat(o => o.map(a => a.summary))).runWith(Sink.seq[Summary])
 }
 
 trait RestClient extends AkkaPlaygroundConfig {
