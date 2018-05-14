@@ -24,7 +24,8 @@ class ApiRoute(implicit system: ActorSystem,
       handleExceptions(handler) {
         get {
           path("stream") {
-            complete(ToResponseMarshallable(ClientGraph.runWikiApiSource(SearchKeys.wikis)))
+            complete(ToResponseMarshallable(ClientGraph.runWikiMultiSources(SearchKeys.wikis)))
+//            complete(ToResponseMarshallable(ClientGraph.runWikiApiSource(SearchKeys.wikis)))
             //complete(ToResponseMarshallable(ClientGraph.runGitApiSource(SearchKeys.names)))
             //complete(ToResponseMarshallable(ClientGraph.runRestMultiSources(SearchKeys.names)))
             //complete(ToResponseMarshallable(ClientGraph.runOpenBdApiSource(SearchKeys.books)))
