@@ -21,7 +21,8 @@ object ClientApi extends App with JsonSupport {
 
 //  ClientGraph.runRestMultiSources(names).foreach(println)
 //  val result = ClientGraph.runGitApiSource(SearchKeys.names)
-  val result = ClientGraph.runWikiApiSource(SearchKeys.wikis)
+//  val result = ClientGraph.runWikiApiSource(SearchKeys.wikis)
+  val result = ClientGraph.runWikiMultiSources(SearchKeys.wikis)
 //  val result = ClientGraph.runOpenBdApiSource(SearchKeys.books)
   result.recover {
     case e: Throwable => println(s"Error: ${e.getMessage}")
@@ -43,8 +44,8 @@ trait RestClient extends AkkaPlaygroundConfig {
   }
 
   //create one source for many request
-  def createRestSources(names: Seq[String])
-                       (implicit system: ActorSystem): Source[HttpRequest, NotUsed] = {
+  def createRestSource(names: Seq[String])
+                      (implicit system: ActorSystem): Source[HttpRequest, NotUsed] = {
     Source[HttpRequest](names.map(n => request(getUrl(n))).toList)
   }
 
@@ -60,7 +61,7 @@ trait RestClient extends AkkaPlaygroundConfig {
   }
 }
 
-object GitRestClinet extends RestClient {
+object GitRestClient extends RestClient {
   def getUrl(name: String): Uri = {
     Uri("https://" + config.getString("rest.api.url") + config.getString("rest.api.uri") + name)
   }

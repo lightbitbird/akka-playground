@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.scaladsl.{Concat, Flow, GraphDSL, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy, SourceShape, ThrottleMode}
-import com.akka.http.{GitRestClinet, OpenBdRestClient, WikiRestClient}
+import com.akka.http.{GitRestClient, OpenBdRestClient, WikiRestClient}
 import com.akka.models._
 import com.config.AkkaPlaygroundConfig
 
@@ -43,7 +43,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
                      materializer: ActorMaterializer): Future[Seq[GitRepo]] = {
     //    val users = Seq("akka+user:lightbitbird", "akka+user:lightbend")
     Source.fromGraph(
-      graphFromRestMultiSources(GitRestClinet.createSingleSources(names))
+      graphFromRestMultiSources(GitRestClient.createSingleSources(names))
     ).runWith(Sink.fold(List.empty[GitRepo])((list, g) => list ::: g))
   }
 
@@ -56,7 +56,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
 
       def f1 = Flow[HttpRequest].map { req =>
         println(s"---------------- f1 ----------------------  ${req.uri.toString}")
-        GitRestClinet.run(req).flatMap(res => GitHubV2Entity.unmarshal(res.entity))
+        GitRestClient.run(req).flatMap(res => GitHubV2Entity.unmarshal(res.entity))
       }.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
 
       def f2 = Flow[Future[GitResultV2]].async.mapAsyncUnordered(3) { f =>
@@ -75,7 +75,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
                                           materializer: ActorMaterializer): Future[Seq[GitRepo]] = {
     //    val users = Seq("akka+user:lightbitbird", "akka+user:lightbend")
     Source.fromGraph(
-      graphFromGitApiSource(GitRestClinet.createRestSources(names))
+      graphFromGitApiSource(GitRestClient.createRestSource(names))
     ).runWith(Sink.fold(List.empty[GitRepo])((list, g) => list ::: g))
   }
 
@@ -88,7 +88,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
 
       def f1 = Flow[HttpRequest].map { req =>
         println(s"---------------- f1 ----------------------  ${req.uri.toString}")
-        GitRestClinet.run(req).flatMap(res => GitHubV2Entity.unmarshal(res.entity))
+        GitRestClient.run(req).flatMap(res => GitHubV2Entity.unmarshal(res.entity))
       }.buffer(10, OverflowStrategy.backpressure).async
 
       def f2 = Flow[Future[GitResultV2]].async.mapAsync(3) { f =>
@@ -104,11 +104,43 @@ object ClientGraph extends AkkaPlaygroundConfig {
     }
   }
 
+  def runWikiMultiSources(names: Seq[String])(implicit sytem: ActorSystem,
+                                              ec: ExecutionContext,
+                                              materializer: ActorMaterializer): Future[Seq[WikiEntity]] = {
+    //    val users = Seq("akka+user:lightbitbird", "akka+user:lightbend")
+    Source.fromGraph(
+      graphFromWikiMultiSources(WikiRestClient.createSingleSources(names))
+    ).runWith(Sink.fold(List.empty[WikiEntity])((list, g) => list ::: g))
+  }
+
+  def graphFromWikiMultiSources(sources: Seq[Source[HttpRequest, NotUsed]])
+                               (implicit sytem: ActorSystem,
+                                ec: ExecutionContext,
+                                materializer: ActorMaterializer) = {
+    GraphDSL.create() { implicit b =>
+      import akka.stream.scaladsl.GraphDSL.Implicits._
+
+      def f1 = Flow[HttpRequest].map { req =>
+        println(s"---------------- f1 ----------------------  ${req.uri.toString}")
+        WikiRestClient.run(req).flatMap(res => WikiResultEntity.unmarshal(res.entity))
+      }.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+
+      def f2 = Flow[Future[List[WikiEntity]]].async.mapAsyncUnordered(3) { f =>
+        for (entity <- f) yield entity
+      }
+
+      val concat = b.add(Concat[List[WikiEntity]](sources.size))
+      sources.map(b.add(_)).foreach(s => s ~> f1 ~> f2 ~> concat)
+
+      SourceShape(concat.out)
+    }
+  }
+
   def runOpenBdApiSource(names: Seq[String])(implicit sytem: ActorSystem,
                                            ec: ExecutionContext,
                                            materializer: ActorMaterializer): Future[Seq[Summary]] = {
     Source.fromGraph(
-      graphFromOpenBdApiSource(OpenBdRestClient.createRestSources(names))
+      graphFromOpenBdApiSource(OpenBdRestClient.createRestSource(names))
     ).runWith(Sink.fold(List.empty[Summary])((list, g) => list ::: g.map(v => v.summary)))
   }
 
@@ -143,7 +175,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
                       materializer: ActorMaterializer): Future[Seq[WikiEntity]] = {
     //    val users = Seq("akka+user:lightbitbird", "akka+user:lightbend")
     Source.fromGraph(
-      graphFromWikiApiSource(WikiRestClient.createRestSources(names))
+      graphFromWikiApiSource(WikiRestClient.createRestSource(names))
     ).runWith(Sink.fold(List.empty[WikiEntity])((list, g) => list ::: g))
     //    ).runWith(Sink.seq[WikiEntity])
   }
