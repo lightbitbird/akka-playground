@@ -57,7 +57,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
       def f1 = Flow[HttpRequest].map { req =>
         println(s"---------------- f1 ----------------------  ${req.uri.toString}")
         GitRestClient.run(req).flatMap(res => GitHubV2Entity.unmarshal(res.entity))
-      }.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+      }.throttle(elements = 16, per = 1.second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
 
       def f2 = Flow[Future[GitResultV2]].async.mapAsyncUnordered(3) { f =>
         for (entity <- f) yield entity.items
@@ -94,7 +94,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
       def f2 = Flow[Future[GitResultV2]].async.mapAsync(3) { f =>
         for (entity <- f) yield entity.items
       }
-      val s = source.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+      val s = source.throttle(elements = 16, per = 1.second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
       val s1 = b.add(s)
       val flow = b.add(f2)
 
@@ -123,7 +123,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
       def f1 = Flow[HttpRequest].map { req =>
         println(s"---------------- f1 ----------------------  ${req.uri.toString}")
         WikiRestClient.run(req).flatMap(res => WikiResultEntity.unmarshal(res.entity))
-      }.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+      }.throttle(elements = 16, per = 1.second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
 
       def f2 = Flow[Future[List[WikiEntity]]].async.mapAsyncUnordered(3) { f =>
         for (entity <- f) yield entity
@@ -160,7 +160,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
         for (e <- f) yield e
       }
 
-      val s = source.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+      val s = source.throttle(elements = 16, per = 1.second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
       val s1 = b.add(s)
       val flow = b.add(f2)
 
@@ -196,7 +196,7 @@ object ClientGraph extends AkkaPlaygroundConfig {
         for (e <- f) yield e
       }
 
-      val s = source.throttle(elements = 16, per = 1 second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
+      val s = source.throttle(elements = 16, per = 1.second, maximumBurst = 0, mode = ThrottleMode.Shaping).async
       val s1 = b.add(s)
       val flow = b.add(f2)
 

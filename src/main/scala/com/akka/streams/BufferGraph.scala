@@ -2,8 +2,8 @@ package com.akka.streams
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, RunnableGraph, Sink, Source}
 import akka.stream._
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, RunnableGraph, Sink, Source}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -20,8 +20,7 @@ object BufferGraph extends App {
       implicit builder =>
         import akka.stream.scaladsl.GraphDSL.Implicits._
         // 1秒間に5件のデータを流すソース
-        val source = Source(1 to 15)
-          .throttle(elements = 5, per = 1.second, maximumBurst = 1, mode = ThrottleMode.shaping)
+        val source = Source(1 to 15).throttle(elements = 5, per = 1.second, maximumBurst = 1, mode = ThrottleMode.Shaping)
         val sink: Sink[String, Future[Done]] = Sink.foreach[String](println)
 
         // 2つの出力にブロードキャスト
