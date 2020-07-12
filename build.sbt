@@ -1,3 +1,5 @@
+import sbt.Test
+
 name := "akka-playground"
 
 version := "0.1"
@@ -20,6 +22,10 @@ libraryDependencies ++= {
     "org.slf4j" % "log4j-over-slf4j" % "1.7.25",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
     "org.scalatest"     %% "scalatest"  % scalaTest % "test",
-    "org.mockito" % "mockito-all" % "1.9.5" % Test
+    "org.scalatest"     %% "scalatest-wordspec"  % scalaTest % "test",
+    "org.mockito" %% "mockito-scala-scalatest" % "1.14.8" % Test,
+    "org.mockito" % "mockito-all" % "1.9.5" % Test,
+
   )
 }
+
