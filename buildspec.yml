@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Nothing to do in the install phases...
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phases...
+      - sbt test
+  build:
+    commands:
+      - echo Build started on `date`
+      - sbt package
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  type: zip
+  files:
+    - target/scala-2.13/aakka-playground_2.13-0.1.jar
+
