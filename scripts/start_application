@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+#SRC_LOCATION=/var/local/akka-playground/
+#DEPLOY_JAR="${SRC_LOCATION}/bin/http-server"
+#
+#sudo ln -s $SRC_LOCATION/akka-playground-assembly-0.1.jar $DEPLOY_JAR
+#chmod 755 $DEPLOY_JAR
+
+
+/usr/bin/java -jar /var/local/akka-playground/bin/http-server > /dev/null 2> /dev/null < /dev/null &

@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+
+files:
+  - source: target/scala-2.13/akka-playground-assembly-0.1.jar
+    destination: /var/local/akka-playground/
+
+hooks:
+  BeforeInstall:
+    - location: scripts/install-dependencies.sh
+      timeout: 300
+  AfterInstall:
+    - location: scripts/after-install.sh
+      timeout: 300
+  ApplicationStop:
+    - location: scripts/stop_application
+      timeout: 300
+  ApplicationStart:
+    - location: scripts/start_application
+      timeout: 300

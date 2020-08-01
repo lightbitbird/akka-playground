@@ -11,12 +11,14 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - sbt package
+      - sbt assembly
   post_build:
     commands:
       - echo Build completed on `date`
 artifacts:
   type: zip
   files:
-    - target/scala-2.13/akka-playground_2.13-0.1.jar
+    - target/scala-2.13/akka-playground-assembly-0.1.jar
+    - appspec.yml
+    - scripts/*
 

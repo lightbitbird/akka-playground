@@ -6,6 +6,12 @@ version := "0.1"
 
 scalaVersion := "2.13.3"
 
+// set the main class for packaging the main jar
+mainClass in (Compile, packageBin) := Some("com.akka.http.HttpServer")
+
+// set the main class for the main 'sbt run' task
+mainClass in (Compile, run) := Some("com.akka.http.HttpServer")
+
 libraryDependencies ++= {
   val akkaHttp = "10.1.12"
   val akkaStream = "2.6.7"
@@ -24,8 +30,7 @@ libraryDependencies ++= {
     "org.scalatest"     %% "scalatest"  % scalaTest % "test",
     "org.scalatest"     %% "scalatest-wordspec"  % scalaTest % "test",
     "org.mockito" %% "mockito-scala-scalatest" % "1.14.8" % Test,
-    "org.mockito" % "mockito-all" % "1.9.5" % Test,
-
+    "org.mockito" % "mockito-all" % "1.9.5" % Test
   )
 }
 
